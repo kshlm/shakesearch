@@ -6,7 +6,6 @@ import (
 
 
 const (
-	hlSep = "**"
 	emptyLine = "\r\n\r\n"
 )
 

@@ -4,6 +4,10 @@ import (
 	"regexp"
 )
 
+const (
+	hlSep = "**"
+)
+
 var (
 	lowercaseWord = regexp.MustCompile(`^[\p{Ll}]+$`)
 )
@@ -14,7 +18,11 @@ var (
 // Returns a string with the section higlighted.
 // To highlight a section is wrapped with "**"
 func highlightSection(text string, start, length int) string {
-	return text[0:start]+hlSep+text[start:start+length]+hlSep+text[start+length:]
+	if start+length < len(text) {
+		return text[:start]+hlSep+text[start:start+length]+hlSep+text[start+length:]
+	} else {
+		return text[:start]+hlSep+text[start:]+hlSep
+	}
 }
 
 func isLowercaseWord(s string) bool {
