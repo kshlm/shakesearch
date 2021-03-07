@@ -14,7 +14,7 @@ const (
 type Results struct {
 	works string // The complete works of Shakespeare
 	mLen int // Length of the match/query
-	blocks map[int]*block // Matched blocks
+	blocks blockSlice// Matched blocks
 }
 
 // block holds a block of matched text
@@ -25,12 +25,14 @@ type block struct {
 	matches []int // Start indices of all matches in block
 }
 
+// blockSlice implements sort.Interface for a slice of blocks
+type blockSlice []*block
+
 // NewResults returns an empty Results struct
 func NewResults(works string, qLen int) *Results {
 	return &Results {
 		works: works,
 		mLen: qLen,
-		blocks: make(map[int]*block),
 	}
 }
 
@@ -43,7 +45,7 @@ func (r *Results) AddMatch(idx int) {
 	}
 	// Or create a new block for the match
 	block := r.newBlock(idx)
-	r.blocks[block.start] = block
+	r.blocks = append(r.blocks, block)
 	return
 }
 
@@ -86,6 +88,7 @@ func (r *Results) newBlock(idx int) *block {
 // Returns a list of blocks with the matches highlighted
 func (r *Results) ToList() []string {
 	var hlBlocks []string
+	sort.Sort(r.blocks)
 	for _, block := range r.blocks {
 		hlBlocks = append(hlBlocks, block.higlightMatches())
 	}
@@ -111,11 +114,11 @@ func (b *block) higlightMatches() string {
 	return text
 }
 
-// highlightMatch highlights a match in a text block
-// Takes a string, a start index, and a length of section to be
-// highlighted.
-// Returns a string with the section higlighted.
-// To highlight a section is wrapped with "**"
-func highlightSection(text string, start, length int) string {
-	return text[0:start]+hlSep+text[start:start+length]+hlSep+text[start+length:]
-}
+// Len implements sort.Inferface.Len() for blockSlice
+func (b blockSlice) Len() int { return len(b) }
+
+// Less implements sort.Interface.Less() for blockSlice
+func (b blockSlice) Less(i,j int) bool { return b[i].start < b[j].start }
+
+// Swap implements sort.Interface.Swap() for blockSlice
+func (b blockSlice) Swap(i,j int) { b[i], b[j] = b[j], b[i] }
