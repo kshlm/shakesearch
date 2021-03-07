@@ -76,7 +76,28 @@ func (s *Searcher) Search(query string) []string {
 	idxs := s.SuffixArray.Lookup([]byte(query), -1)
 	results := []string{}
 	for _, idx := range idxs {
-		results = append(results, s.CompleteWorks[idx-250:idx+250])
+		results = append(results, s.GetBlock(idx, len(query)))
 	}
 	return results
+}
+
+// GetBlock returns the block of text the given index is within
+// A block of text is defined as a set of lines bounded by '\r\n' lines.
+func (s *Searcher) GetBlock(index, qlen int) string {
+
+	var start, end int
+	const emptyLine = "\r\n\r\n"
+
+	for start = index; (start - 4) >= 0; start-- {
+		if s.CompleteWorks[start-4:start] == emptyLine {
+			break
+		}
+	}
+	for end = index+qlen; (end+5) < len(s.CompleteWorks) ; end++ {
+		if s.CompleteWorks[end+1:end+5] == emptyLine {
+			break
+		}
+	}
+
+	return s.CompleteWorks[start:end]
 }
