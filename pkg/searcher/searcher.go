@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"index/suffixarray"
 	"io/ioutil"
+	"regexp"
 )
 
 type Searcher struct {
@@ -22,7 +23,17 @@ func (s *Searcher) Load(filename string) error {
 }
 
 func (s *Searcher) Search(query string) []string {
-	idxs := s.SuffixArray.Lookup([]byte(query), -1)
+	var idxs []int
+	// Do a case insensitive search if a single lower case word is given
+	if isLowercaseWord(query) {
+		re := regexp.MustCompile("(?i)"+query)
+		found := s.SuffixArray.FindAllIndex(re, -1)
+		for _, i := range found {
+			idxs = append(idxs, i[0]) // we only need the start index
+		}
+	} else {
+		idxs = s.SuffixArray.Lookup([]byte(query), -1)
+	}
 	results := NewResults(s.CompleteWorks, len(query))
 	for _, idx := range idxs {
 		results.AddMatch(idx)
